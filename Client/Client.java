@@ -50,7 +50,12 @@ public class Client {
                 out.println(option);
                 switch(option){
                     case "1":
-
+                        String groupName;
+                        while ((groupName = userInput.readLine()) != null){
+                            out.println(groupName);
+                            out.flush();
+                            break;
+                        }
                         break;
                     case "2":
                         break;
@@ -61,7 +66,7 @@ public class Client {
                             out.flush();
                             break;
                         }
-                        print("\nTestMessage 2!!");
+                        //print("\nTestMessage 2!!");
                         break;
                     case "0":
                         print("Bye Bye!");
@@ -69,7 +74,7 @@ public class Client {
                     default:
                         print("\nInvalid Option");
                 }
-                print("\nTestMessage 3!!!");
+                //print("\nTestMessage 3!!!");
 
             }while(!option.equals("0"));
 

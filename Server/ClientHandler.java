@@ -1,6 +1,7 @@
 package Server;
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 
 
 class ClientHandler implements Runnable {
@@ -9,12 +10,17 @@ class ClientHandler implements Runnable {
     private BufferedReader in; // Flujo de entrada para leer los mensajes del cliente
     private PrintWriter out; // Flujo de salida para enviar mensajes al cliente
     private String clientName; // Nombre de usuario del cliente
+    private GroupController groupController;
+    ArrayList<Group> groups; //lista de grupos creados
     Chatters clientes; // Objeto que contiene la lista de clientes conectados
+    
 
-    public ClientHandler(Socket socket, Chatters clientes) {
+    public ClientHandler(Socket socket, Chatters clientes, ArrayList<Group> groups) {
         // Asignar los objetos que llegan a su respectivo atributo en la clase
         this.clientSocket = socket;
         this.clientes = clientes;
+        this.groups = groups;
+        this.groupController = new GroupController(groups);
 
         // Crear canales de entrada in y de salida out para la comunicación
         try {
@@ -28,7 +34,8 @@ class ClientHandler implements Runnable {
         return "\n"+
         "1. Create Group\n"+
         "2. Join Group\n"+
-        "3. Send Message";
+        "3. Send Message\n"+
+        "4. List Groups";
     }
 
     @Override
@@ -50,6 +57,17 @@ class ClientHandler implements Runnable {
 
                 switch(message){
                     case "1":
+                        out.println("\n Enter Group Name :");
+                        String groupName;
+                        while((groupName = in.readLine())!=null){
+                            if(groupController.groupExists(groupName)){
+                                out.println("\n Group Already Exists");
+                            }else{
+                                groups.add(new Group(groupName));
+                                out.println("\nGroup Created Succesfully");
+                            }
+                            break;
+                        }
                         break;
                     case "2":
                         break;
@@ -81,6 +99,17 @@ class ClientHandler implements Runnable {
                         break;
                     case "0":
                         out.println("See you Next Time!");
+                        break;
+                    case "4":
+                        String msj = "\n";
+                        msj += "Group List :";
+                        for(int i=0;i<groups.size();i++){
+                            msj +="\nNAME : "+groups.get(i).getGroupName();
+                        }
+                        out.println(msj);
+                        break;
+                    case "5":
+                        out.println("Clientes size : "+clientes.getSize());
                         break;
                     default:
                        print("\n Invalid Option");

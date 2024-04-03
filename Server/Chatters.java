@@ -19,6 +19,9 @@ public class Chatters {
         }
         return false;
     }
+    public int getSize(){
+        return clientes.size();
+    }
 
     // Método para agregar un usuario nuevo
     public void addPerson(String nombre, PrintWriter out) {
