@@ -46,7 +46,7 @@ class ClientHandler implements Runnable {
 
         try {
             clientName = in.readLine(); // Solicita un nombre de usuario a un cliente
-            while (clientes.personExist(clientName)) { // Verifica que el nombre de usuario del nuevo cliente no exista
+            while (clientes.personExist(clientName) || clientName.equalsIgnoreCase("all")) { // Verifica que el nombre de usuario del nuevo cliente no exista
                 out.println("\nUsername already taken. Please enter a new name."); // Solicita de nuevo el nombre si ese nombre ya está en uso
                 clientName = in.readLine();
             }
@@ -110,8 +110,6 @@ class ClientHandler implements Runnable {
                         out.println("\n Type Message :");
                         String newMessage;
                         while((newMessage = in.readLine())!=null){
-                            //out.println("Mensaje: "+newMessage);
-                            //print("MensajeTest 1");
                             if (newMessage.startsWith("@")) {
                                 // Mensaje privado
                                 String[] parts = newMessage.split(" ", 2);
@@ -125,8 +123,6 @@ class ClientHandler implements Runnable {
                                 }
             
                             }else {
-
-                                // Mensaje público
                                 Person per1 = clientes.getPerson(clientName);
                                 if(per1.isInGroup()){
                                     Group group = per1.getGroup();
@@ -134,7 +130,6 @@ class ClientHandler implements Runnable {
                                     clientes.sendMessageToAllInGroup(newMessage,group.getPersons());
                                 }else{
                                     out.println("\n [System]: You are not in a group yet.....");
-
                                 }
                                 
                             }
@@ -148,21 +143,26 @@ class ClientHandler implements Runnable {
                         while((userAudio = in.readLine())!=null){
                         
                             if(userAudio.equalsIgnoreCase("all")){
+                                out.println("\n ENTRA EN CASO DE ALL");
                                 byte[] audioData=startRecording(userAudio);
-                               
-                                clientes.sendAudioToUser(userAudio, clientName, audioData);
+                                Person p=clientes.getPerson(clientName);
+                                if(p.isInGroup()){
+                                    ArrayList<Person> persons=p.getGroup().getPersons();
+                                    clientes.sendAudioToAll(clientName, audioData, persons);
+                                }else{
+                                    out.println("\n [System]: You are not in a group yet.....");
+                                }
                                 
                             }else{
+                                out.println("\n ENTRA CASO USER");
                                 if(clientes.personExist(userAudio)==true){
                                     byte[] audioData=startRecording(userAudio);
-                                    Person p=clientes.getPerson(clientName);
-                                    if(p.isInGroup()==true){
-                                        ArrayList<Person> persons=p.getGroup().getPersons();
-                                        clientes.sendAudioToAll(clientName, audioData, persons);
-                                    }
+                                    clientes.sendAudioToUser(userAudio, clientName, audioData);
                                 }
                             }
+                            break;
                         }
+                        break;
 
                     case "0":
                         Person personLeaving = clientes.getPerson(clientName);
@@ -176,25 +176,15 @@ class ClientHandler implements Runnable {
                         clientes.removeClient(personLeaving);
                         out.println("See you Next Time!");
                         break;
-                    case "6":
-                        String msj = "\n";
-                        msj += "Group List :";
-                        for(int i=0;i<groups.size();i++){
-                            msj +="\nNAME : "+groups.get(i).getGroupName();
-                        }
-                        out.println(msj);
-                        break;
                     default:
                        out.println("\n[System]: Invalid Option");
                 }
-                //print("\n TestMessage 5!!!!!");
                 out.println(mainMenu());
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         } catch (LineUnavailableException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } finally {
 
@@ -212,16 +202,20 @@ class ClientHandler implements Runnable {
         return "\nMain Menu :\n"+
         "1. Create Group\n"+
         groupOption+
-        "3. Send Message to group\n"+
-        "4. List Groups\n"+
+        "3. Send Message\n"+
+        "4. Send Audio\n"+
         "0. Exit Program\n";
         
     }
     public static void print(Object o){System.out.println(o);}
 
     public byte[] startRecording(String username) throws LineUnavailableException, IOException{
-        out.println("Press Enter to start recording...");
-        scanner.nextLine();
+        out.println("\n Press Enter to start recording...");
+        //scanner.nextLine();
+        String enterInput;
+        while((enterInput = in.readLine())!=null){
+            break;
+        }
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         AudioFormat audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100, 16, 2, 4, 44100, false);
         DataLine.Info info = new DataLine.Info(TargetDataLine.class, audioFormat);
@@ -247,7 +241,11 @@ class ClientHandler implements Runnable {
             recordingThread.start();
             // Espera a que el usuario detenga la grabación
             out.println("Recording... Press Enter to stop and send");
-            scanner.nextLine();
+            //scanner.nextLine();
+            String enterInput2;
+            while((enterInput2 = in.readLine())!=null){
+                break;
+            }
             // Detiene la grabación y cierra la línea de entrada de audio
             targetDataLine.stop();
             targetDataLine.close();

@@ -77,6 +77,18 @@ public class Client {
                             out.flush();
                             break;
                         }
+                        String EnterInput1;
+                        while ((EnterInput1 = userInput.readLine()) != null){
+                            out.println(EnterInput1);
+                            out.flush();
+                            break;
+                        }
+                        String EnterInput2;
+                        while ((EnterInput2 = userInput.readLine()) != null){
+                            out.println(EnterInput2);
+                            out.flush();
+                            break;
+                        }
                         break;
                     case "0":
                         Thread.sleep(200);
