@@ -72,7 +72,14 @@ public class Client {
                             out.flush();
                             break;
                         }
-                        //print("\nTestMessage 2!!");
+                        break;
+                    case "4":
+                        String userInputAudio;
+                        while ((userInputAudio = userInput.readLine()) != null){
+                            out.println(userInputAudio);
+                            out.flush();
+                            break;
+                        }
                         break;
                     case "0":
                         print("Bye Bye!");

@@ -2,6 +2,13 @@ package Server;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Scanner;
+
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.TargetDataLine;
 
 
 class ClientHandler implements Runnable {
@@ -13,6 +20,7 @@ class ClientHandler implements Runnable {
     private GroupController groupController;
     ArrayList<Group> groups; //lista de grupos creados
     Chatters clientes; // Objeto que contiene la lista de clientes conectados
+    Scanner scanner;
     
 
     public ClientHandler(Socket socket, Chatters clientes, ArrayList<Group> groups) {
@@ -21,6 +29,7 @@ class ClientHandler implements Runnable {
         this.clientes = clientes;
         this.groups = groups;
         this.groupController = new GroupController(groups);
+        this.scanner= new Scanner(System.in);
 
         // Crear canales de entrada in y de salida out para la comunicación
         try {
@@ -46,7 +55,6 @@ class ClientHandler implements Runnable {
             out.println("------------WELCOME---------------");
             out.println(mainMenu());
             String message;
-            Integer flag =1;
             while ((message = in.readLine()) != null) {
 
                 switch(message){
@@ -126,24 +134,41 @@ class ClientHandler implements Runnable {
                                 newMessage = clientName+": "+newMessage;
                                 clientes.sendMessageToAllInGroup(newMessage,group.getPersons());
                             }
-                            //print("\n TestMessage 4!!!!");
                             break;
                         }
-                        print("\nEnd of Message Sending");
                         break;
+                    case "4":
+                        String userAudio;
+                        out.println("Enter recipient username (or 'all' for group): ");
+                        while((userAudio = in.readLine())!=null){
+                        
+                            if(userAudio.equalsIgnoreCase("all")){
+                                byte[] audioData=startRecording(userAudio);
+                               
+                                clientes.sendAudioToUser(userAudio, clientName, audioData);
+                                
+                            }else{
+                                if(clientes.personExist(userAudio)==true){
+                                    byte[] audioData=startRecording(userAudio);
+                                    Person p=clientes.getPerson(clientName);
+                                    if(p.isInGroup()==true){
+                                        ArrayList<Person> persons=p.getGroup().getPersons();
+                                        clientes.sendAudioToAll(clientName, audioData, persons);
+                                    }
+                                }
+                            }
+                        }
+
                     case "0":
                         out.println("See you Next Time!");
                         break;
-                    case "4":
+                    case "6":
                         String msj = "\n";
                         msj += "Group List :";
                         for(int i=0;i<groups.size();i++){
                             msj +="\nNAME : "+groups.get(i).getGroupName();
                         }
                         out.println(msj);
-                        break;
-                    case "5":
-                        out.println("Clientes size : "+clientes.getSize());
                         break;
                     default:
                        print("\n Invalid Option");
@@ -153,6 +178,9 @@ class ClientHandler implements Runnable {
             }
 
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (LineUnavailableException e) {
+            // TODO Auto-generated catch block
             e.printStackTrace();
         } finally {
 
@@ -165,8 +193,10 @@ class ClientHandler implements Runnable {
             return "\nMain Menu :\n"+
             "1. Create Group\n"+
             "2. Leave Group\n"+
-            "3. Send Message to group\n"+
-            "4. List Groups";
+            "3. Send private message or to a group\n"+
+            "4. send a private audio or to a group\n"+
+            "5. call a person or group\n"+
+            "6. List Groups";
         }else{
             return "\nMain Menu :\n"+
             "1. Create Group\n"+
@@ -177,5 +207,44 @@ class ClientHandler implements Runnable {
         
     }
     public static void print(Object o){System.out.println(o);}
+
+    public byte[] startRecording(String username) throws LineUnavailableException, IOException{
+        out.println("Press Enter to start recording...");
+        scanner.nextLine();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        AudioFormat audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100, 16, 2, 4, 44100, false);
+        DataLine.Info info = new DataLine.Info(TargetDataLine.class, audioFormat);
+        if (!AudioSystem.isLineSupported(info)) {
+            // Verifica si el sistema soporta la línea de entrada de audio
+            System.err.println("Line not supported");
+            System.exit(0);
+        }
+        try (TargetDataLine targetDataLine = (TargetDataLine) AudioSystem.getLine(info)) {
+            targetDataLine.open(audioFormat);
+            targetDataLine.start();
+            Thread recordingThread = new Thread(() -> {
+                // Graba audio continuamente hasta que el usuario detiene la grabación
+                int bufferSize = (int) audioFormat.getSampleRate() * audioFormat.getFrameSize();
+                byte[] buffer = new byte[bufferSize];
+                while (true) {
+                    int count = targetDataLine.read(buffer, 0, buffer.length);
+                    if (count > 0) {
+                        byteArrayOutputStream.write(buffer, 0, count);
+                    }
+                }
+            });
+            recordingThread.start();
+            // Espera a que el usuario detenga la grabación
+            out.println("Recording... Press Enter to stop and send");
+            scanner.nextLine();
+            // Detiene la grabación y cierra la línea de entrada de audio
+            targetDataLine.stop();
+            targetDataLine.close();
+            // Guarda el audio en un archivo y lo envía al servidor
+            clientes.saveAudio(byteArrayOutputStream.toByteArray());
+            byteArrayOutputStream.close();
+        }
+        return byteArrayOutputStream.toByteArray();
+    }
 
 }
