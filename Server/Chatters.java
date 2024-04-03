@@ -88,6 +88,13 @@ public class Chatters {
         // Enviar mensaje al remitente si el destinatario no se encuentra
         sendMessageToSender(sender, "User '" + recipient + "' not found or offline.");
     }
+    public String listUsers(){
+        String msj = "\n  USERS :";
+        for (Person p : clientes) {
+            msj+="\n"+p.getName();
+        }
+        return msj;
+    }
 
 // Método para enviar un mensaje de error al remitente
     private void sendMessageToSender(String sender, String message) {
@@ -139,7 +146,7 @@ public class Chatters {
     }
     /* */
     // Verifica si la carpeta de audio existe, si no, la crea
-    private static void createAudioFolderIfNeeded() {
+    public static void createAudioFolderIfNeeded() {
         Path audioFolderPath = Paths.get(AUDIO_FOLDER);
         if (!Files.exists(audioFolderPath)) {
             try {

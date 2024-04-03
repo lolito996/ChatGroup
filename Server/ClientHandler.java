@@ -143,7 +143,6 @@ class ClientHandler implements Runnable {
                         while((userAudio = in.readLine())!=null){
                         
                             if(userAudio.equalsIgnoreCase("all")){
-                                out.println("\n ENTRA EN CASO DE ALL");
                                 byte[] audioData=startRecording(userAudio);
                                 Person p=clientes.getPerson(clientName);
                                 if(p.isInGroup()){
@@ -154,8 +153,7 @@ class ClientHandler implements Runnable {
                                 }
                                 
                             }else{
-                                out.println("\n ENTRA CASO USER");
-                                if(clientes.personExist(userAudio)==true){
+                                if(clientes.personExist(userAudio)){
                                     byte[] audioData=startRecording(userAudio);
                                     clientes.sendAudioToUser(userAudio, clientName, audioData);
                                 }
@@ -163,7 +161,10 @@ class ClientHandler implements Runnable {
                             break;
                         }
                         break;
-
+                    case "5":
+                        String users = clientes.listUsers();
+                        out.println(users);
+                        break;
                     case "0":
                         Person personLeaving = clientes.getPerson(clientName);
                         if(personLeaving.isInGroup()){
@@ -204,6 +205,7 @@ class ClientHandler implements Runnable {
         groupOption+
         "3. Send Message\n"+
         "4. Send Audio\n"+
+        "5. Print all Users\n"+
         "0. Exit Program\n";
         
     }
