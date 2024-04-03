@@ -1,15 +1,13 @@
 package Client;
 import java.io.*;
 import java.net.*;
-import Server.Group;
-import Server.Person;
 
 public class Client {
     private static final String SERVER_IP = "localhost";
     private static final int PORT = 3500;
     private static final String AUDIO_FOLDER = "audios";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException{
         try {
             Socket socket = new Socket(SERVER_IP, PORT);
             System.out.println("connection established with the server");
@@ -44,7 +42,6 @@ public class Client {
             readerThread.start();
 
             String option = "";
-            Integer flag = 1;
             do{
                 option = userInput.readLine();
                 out.println(option);
@@ -80,17 +77,26 @@ public class Client {
                             out.flush();
                             break;
                         }
+                        String EnterInput1;
+                        while ((EnterInput1 = userInput.readLine()) != null){
+                            out.println(EnterInput1);
+                            out.flush();
+                            break;
+                        }
+                        String EnterInput2;
+                        while ((EnterInput2 = userInput.readLine()) != null){
+                            out.println(EnterInput2);
+                            out.flush();
+                            break;
+                        }
                         break;
                     case "0":
-                        print("Bye Bye!");
+                        Thread.sleep(200);
                         break;
                     default:
-                        print("\nInvalid Option");
                 }
-                //print("\nTestMessage 3!!!");
 
             }while(!option.equals("0"));
-
 
             socket.close();
             System.exit(0);

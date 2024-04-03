@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 public class ClientAudio {
     // Dirección IP del servidor
-    private static final String SERVER_IP = "127.0.0.1";
+    private static final String SERVER_IP = "localhost";
     // Puerto del servidor
     private static final int SERVER_PORT = 12345;
     // Carpeta donde se guardarán los archivos de audio

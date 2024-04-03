@@ -46,7 +46,7 @@ class ClientHandler implements Runnable {
 
         try {
             clientName = in.readLine(); // Solicita un nombre de usuario a un cliente
-            while (clientes.personExist(clientName)) { // Verifica que el nombre de usuario del nuevo cliente no exista
+            while (clientes.personExist(clientName) || clientName.equalsIgnoreCase("all")) { // Verifica que el nombre de usuario del nuevo cliente no exista
                 out.println("\nUsername already taken. Please enter a new name."); // Solicita de nuevo el nombre si ese nombre ya está en uso
                 clientName = in.readLine();
             }
@@ -63,10 +63,10 @@ class ClientHandler implements Runnable {
                         String groupName;
                         while((groupName = in.readLine())!=null){
                             if(groupController.groupExists(groupName)){
-                                out.println("\n Group Already Exists");
+                                out.println("\n[System]: Group Already Exists");
                             }else{
                                 groups.add(new Group(groupName));
-                                out.println("\nGroup Created Succesfully");
+                                out.println("\n[System]: Group Created Succesfully");
                             }
                             break;
                         }
@@ -77,23 +77,23 @@ class ClientHandler implements Runnable {
                             Group g1 = p1.getGroup();
                             g1.removePersonFromGroup(p1);
                             p1.setIsInGroup(false);
-                            String msj4 = clientName + " has left the group.";
-                            clientes.sendMessageToAllInGroup(msj4,g1.getPersons());
-                            out.println("\n You are no Longer in the Group");
+                            String personLeftGroup = clientName + " has left the group.";
+                            clientes.sendMessageToAllInGroup(personLeftGroup,g1.getPersons());
+                            out.println("\n[System]: You are no Longer in the Group");
                         }else{
-                            String msj2 = "\n Enter Group Name :";
-                            msj2 += groupController.listGroups();
-                            out.println(msj2);
+                            String groupString = "\n Enter Group Name :";
+                            groupString += groupController.listGroups(); // Obtiene la lista de todos los grupos creados
+                            out.println(groupString);
                             String enteringGroup;
                             int index;
                             while((enteringGroup = in.readLine())!=null){
                                 index = groupController.searchGroup(enteringGroup); 
                                 if(index==-1){
-                                    out.println("\n Group Doesn't Exists");
+                                    out.println("\n[System]: Group Doesn't Exists");
                                 }else{
                                     Person p = clientes.getPerson(clientName);
                                     if(p.isInGroup()){
-                                        out.println("\n You are Already in A Group");
+                                        out.println("\n[System]: You are Already in A Group");
                                     }else{
                                         groupController.addClientToGroup(index,p);
                                         String msj3 = clientName + " has joined the group.";
@@ -110,10 +110,7 @@ class ClientHandler implements Runnable {
                         out.println("\n Type Message :");
                         String newMessage;
                         while((newMessage = in.readLine())!=null){
-                            //out.println("Mensaje: "+newMessage);
-                            //print("MensajeTest 1");
                             if (newMessage.startsWith("@")) {
-
                                 // Mensaje privado
                                 String[] parts = newMessage.split(" ", 2);
                                 if (parts.length > 1) {
@@ -122,20 +119,23 @@ class ClientHandler implements Runnable {
                                     clientes.sendMessageToUser(clientName, recipient, privateMessage);
             
                                 } else {
-                                    out.println("Invalid private message format. Usage: @recipient message");
+                                    out.println("[System]: Invalid private message format. Usage: @recipient message");
                                 }
             
                             }else {
-                                // Mensaje público
                                 Person per1 = clientes.getPerson(clientName);
-                                //out.println("Nombre del cliente :"+per1.getName());
-                                //Group g3 = per1.getGroup();
-                                Group group = per1.getGroup();
-                                newMessage = clientName+": "+newMessage;
-                                clientes.sendMessageToAllInGroup(newMessage,group.getPersons());
+                                if(per1.isInGroup()){
+                                    Group group = per1.getGroup();
+                                    newMessage = "\n"+clientName+": "+newMessage;
+                                    clientes.sendMessageToAllInGroup(newMessage,group.getPersons());
+                                }else{
+                                    out.println("\n [System]: You are not in a group yet.....");
+                                }
+                                
                             }
                             break;
                         }
+
                         break;
                     case "4":
                         String userAudio;
@@ -143,44 +143,48 @@ class ClientHandler implements Runnable {
                         while((userAudio = in.readLine())!=null){
                         
                             if(userAudio.equalsIgnoreCase("all")){
+                                out.println("\n ENTRA EN CASO DE ALL");
                                 byte[] audioData=startRecording(userAudio);
-                               
-                                clientes.sendAudioToUser(userAudio, clientName, audioData);
+                                Person p=clientes.getPerson(clientName);
+                                if(p.isInGroup()){
+                                    ArrayList<Person> persons=p.getGroup().getPersons();
+                                    clientes.sendAudioToAll(clientName, audioData, persons);
+                                }else{
+                                    out.println("\n [System]: You are not in a group yet.....");
+                                }
                                 
                             }else{
+                                out.println("\n ENTRA CASO USER");
                                 if(clientes.personExist(userAudio)==true){
                                     byte[] audioData=startRecording(userAudio);
-                                    Person p=clientes.getPerson(clientName);
-                                    if(p.isInGroup()==true){
-                                        ArrayList<Person> persons=p.getGroup().getPersons();
-                                        clientes.sendAudioToAll(clientName, audioData, persons);
-                                    }
+                                    clientes.sendAudioToUser(userAudio, clientName, audioData);
                                 }
                             }
+                            break;
                         }
+                        break;
 
                     case "0":
+                        Person personLeaving = clientes.getPerson(clientName);
+                        if(personLeaving.isInGroup()){
+                            personLeaving.setIsInGroup(false);
+                            Group lastGroup = personLeaving.getGroup();
+                            lastGroup.deletePersonFromGroup(personLeaving);
+                            String personleavingMessage = clientName + " has left the group.";
+                            clientes.sendMessageToAllInGroup(personleavingMessage,lastGroup.getPersons());
+                        }
+                        clientes.removeClient(personLeaving);
                         out.println("See you Next Time!");
                         break;
-                    case "6":
-                        String msj = "\n";
-                        msj += "Group List :";
-                        for(int i=0;i<groups.size();i++){
-                            msj +="\nNAME : "+groups.get(i).getGroupName();
-                        }
-                        out.println(msj);
-                        break;
                     default:
-                       print("\n Invalid Option");
+                       out.println("\n[System]: Invalid Option");
                 }
-                //print("\n TestMessage 5!!!!!");
                 out.println(mainMenu());
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         } catch (LineUnavailableException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } finally {
 
@@ -189,28 +193,29 @@ class ClientHandler implements Runnable {
 
     }
     public String mainMenu(){
+        String groupOption = "";
         if(clientes.getPerson(clientName).isInGroup()){
-            return "\nMain Menu :\n"+
-            "1. Create Group\n"+
-            "2. Leave Group\n"+
-            "3. Send private message or to a group\n"+
-            "4. send a private audio or to a group\n"+
-            "5. call a person or group\n"+
-            "6. List Groups";
+           groupOption = "2. Leave Group\n";
         }else{
-            return "\nMain Menu :\n"+
-            "1. Create Group\n"+
-            "2. Join Group\n"+
-            "3. Send Message to group\n"+
-            "4. List Groups";
+            groupOption = "2. Join Group\n";
         }
+        return "\nMain Menu :\n"+
+        "1. Create Group\n"+
+        groupOption+
+        "3. Send Message\n"+
+        "4. Send Audio\n"+
+        "0. Exit Program\n";
         
     }
     public static void print(Object o){System.out.println(o);}
 
     public byte[] startRecording(String username) throws LineUnavailableException, IOException{
-        out.println("Press Enter to start recording...");
-        scanner.nextLine();
+        out.println("\n Press Enter to start recording...");
+        //scanner.nextLine();
+        String enterInput;
+        while((enterInput = in.readLine())!=null){
+            break;
+        }
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         AudioFormat audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100, 16, 2, 4, 44100, false);
         DataLine.Info info = new DataLine.Info(TargetDataLine.class, audioFormat);
@@ -236,7 +241,11 @@ class ClientHandler implements Runnable {
             recordingThread.start();
             // Espera a que el usuario detenga la grabación
             out.println("Recording... Press Enter to stop and send");
-            scanner.nextLine();
+            //scanner.nextLine();
+            String enterInput2;
+            while((enterInput2 = in.readLine())!=null){
+                break;
+            }
             // Detiene la grabación y cierra la línea de entrada de audio
             targetDataLine.stop();
             targetDataLine.close();

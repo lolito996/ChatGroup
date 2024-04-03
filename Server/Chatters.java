@@ -42,6 +42,10 @@ public class Chatters {
         }
         return false;
     }
+    public void removeClient(Person person){
+        clientes.remove(person);
+        personList.remove(person);
+    }
     public Person getPerson(String name){
         Person person = null;
         for(int i=0;i<personList.size();i++){
@@ -77,7 +81,7 @@ public class Chatters {
     public void sendMessageToUser(String sender, String recipient, String message) {
         for (Person p : clientes) {
             if (p.getName().equals(recipient)) {
-                p.getOut().println(sender + " (private): " + message);
+                p.getOut().println("\n"+sender + " (private): " + message);
                 return;
             }
         }
