@@ -1,6 +1,7 @@
 package Server;
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 
 public class Server {
 
@@ -8,6 +9,7 @@ public class Server {
 
         int PORT = 3500;
         Chatters clientes = new Chatters(); //lista de clientes
+        ArrayList<Group> groups = new ArrayList<>();
 
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
@@ -18,15 +20,13 @@ public class Server {
                 System.out.println("New client connected: " + clientSocket);
                 //clientes.addPerson();
 
-                ClientHandler clientHandler = new ClientHandler(clientSocket, clientes);
+                ClientHandler clientHandler = new ClientHandler(clientSocket, clientes, groups);
                 Thread clientThread = new Thread(clientHandler);
                 clientThread.start();
-<<<<<<< HEAD
-=======
                 //crea el objeto para gestionar al cliente y le envia la informacion necesaria
                 //inicia el hilo para ese cliente
                 
->>>>>>> a25aa627be212685dc2b1dbc327fe2513ecd09ed
+
             }
         } catch (IOException e) {
             e.printStackTrace();

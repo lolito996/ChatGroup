@@ -1,11 +1,13 @@
 package Server;
 import java.util.Set;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 public class Chatters {
     
     private Set<Person> clientes = new HashSet<>(); // Lista de personas que serán nuestros clientes
+    private ArrayList<Person> personList = new ArrayList<>();
 
     public Chatters() {
     }
@@ -19,11 +21,24 @@ public class Chatters {
         }
         return false;
     }
+    public Person getPerson(String name){
+        Person person = null;
+        for(int i=0;i<personList.size();i++){
+            if(personList.get(i).getName().equals(name)){
+                person = personList.get(i);
+            }
+        }
+        return person;
+    }
+    public int getSize(){
+        return clientes.size();
+    }
 
     // Método para agregar un usuario nuevo
     public void addPerson(String nombre, PrintWriter out) {
         Person p = new Person(nombre, out);
         clientes.add(p);
+        personList.add(p);
     }
 
     // Método para enviar un mensaje a todos los usuarios
@@ -32,7 +47,11 @@ public class Chatters {
             p.getOut().println(mensaje);
         }
     }
-<<<<<<< HEAD
+    public void sendMessageToAllInGroup(String mensaje,ArrayList<Person> persons) {
+        for (Person p : persons) {
+            p.getOut().println(mensaje);
+        }
+    }
     // Método para enviar un mensaje a un usuario específico
     public void sendMessageToUser(String sender, String recipient, String message) {
         for (Person p : clientes) {
@@ -54,7 +73,5 @@ public class Chatters {
             }
         }
     }
-=======
->>>>>>> a25aa627be212685dc2b1dbc327fe2513ecd09ed
 
 }
