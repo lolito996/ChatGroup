@@ -70,6 +70,14 @@ public class Client {
                             break;
                         }
                         break;
+                    case "4":
+                        String userInputAudio;
+                        while ((userInputAudio = userInput.readLine()) != null){
+                            out.println(userInputAudio);
+                            out.flush();
+                            break;
+                        }
+                        break;
                     case "0":
                         Thread.sleep(200);
                         break;
