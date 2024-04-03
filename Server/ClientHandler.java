@@ -40,6 +40,7 @@ class ClientHandler implements Runnable {
 
             String message;
             while ((message = in.readLine()) != null) {
+<<<<<<< HEAD
                 if (message.startsWith("@")) {
             // Mensaje privado
                 String[] parts = message.split(" ", 2);
@@ -56,6 +57,10 @@ class ClientHandler implements Runnable {
     }
 }
 
+=======
+                clientes.sendMessageToAll(clientName + ": " + message);
+            }
+>>>>>>> a25aa627be212685dc2b1dbc327fe2513ecd09ed
             
         } catch (IOException e) {
             e.printStackTrace();

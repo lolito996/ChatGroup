@@ -32,6 +32,7 @@ public class Chatters {
             p.getOut().println(mensaje);
         }
     }
+<<<<<<< HEAD
     // Método para enviar un mensaje a un usuario específico
     public void sendMessageToUser(String sender, String recipient, String message) {
         for (Person p : clientes) {
@@ -53,5 +54,7 @@ public class Chatters {
             }
         }
     }
+=======
+>>>>>>> a25aa627be212685dc2b1dbc327fe2513ecd09ed
 
 }
