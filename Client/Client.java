@@ -1,10 +1,13 @@
 package Client;
 import java.io.*;
 import java.net.*;
+import Server.Group;
+import Server.Person;
 
 public class Client {
     private static final String SERVER_IP = "localhost";
     private static final int PORT = 3500;
+    private static final String AUDIO_FOLDER = "audios";
 
     public static void main(String[] args) {
         try {
@@ -12,41 +15,25 @@ public class Client {
             System.out.println("connection established with the server");
 
             String message;
-<<<<<<< HEAD
-=======
-            //canal de entrada para el usuario
->>>>>>> a25aa627be212685dc2b1dbc327fe2513ecd09ed
-            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in)); 
+            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-<<<<<<< HEAD
-=======
-        
-            //usando el socket, crear los canales de entrada in y salida out
-                      
-            //solicitar al usuario un alias, o nombre y enviarlo al servidor
-            //no debe salir de este bloque hasta que el nombre no sea aceptado
-            //al ser aceptado notificar, de lo contrario seguir pidiendo un alias
-            
->>>>>>> a25aa627be212685dc2b1dbc327fe2513ecd09ed
             System.out.print("Type username the user : ");
             String username = userInput.readLine();
             out.println(username);
-            
+
             String response = in.readLine();
             System.out.println(response);
 
-<<<<<<< HEAD
-=======
-                 
-            //creamos el objeto Lector e iniciamos el hilo que nos permitira estar atentos a los mensajes
-            //que llegan del servidor
-            //inicar el hilo
->>>>>>> a25aa627be212685dc2b1dbc327fe2513ecd09ed
+            response = in.readLine();
+            System.out.println(response);
+            
             Thread readerThread = new Thread(() -> {
+
                 try {
                     String msg;
+                    
                     while ((msg = in.readLine()) != null) {
                         System.out.println(msg);
                     }
@@ -55,24 +42,44 @@ public class Client {
                 }
             });
             readerThread.start();
-<<<<<<< HEAD
-=======
+
+            String option = "";
+            Integer flag = 1;
+            do{
+                option = userInput.readLine();
+                out.println(option);
+                switch(option){
+                    case "1":
+
+                        break;
+                    case "2":
+                        break;
+                    case "3":
+                        String userInputMessage;
+                        while ((userInputMessage = userInput.readLine()) != null){
+                            out.println(userInputMessage);
+                            out.flush();
+                            break;
+                        }
+                        print("\nTestMessage 2!!");
+                        break;
+                    case "0":
+                        print("Bye Bye!");
+                        break;
+                    default:
+                        print("\nInvalid Option");
+                }
+                print("\nTestMessage 3!!!");
+
+            }while(!option.equals("0"));
 
 
-            //estar atento a la entrada del usuario para poner los mensajes en el canal de salida out
->>>>>>> a25aa627be212685dc2b1dbc327fe2513ecd09ed
-            String userInputMessage;
-
-            while ((userInputMessage = userInput.readLine()) != null) {
-                out.println(userInputMessage);
-                out.flush();
-            }
-
-            //socket.close();
-
-
+            socket.close();
+            System.exit(0);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+    public static void print(Object o){System.out.println(o);}
+
 }

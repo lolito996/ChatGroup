@@ -24,6 +24,12 @@ class ClientHandler implements Runnable {
             e.printStackTrace();
         }
     }
+    public String mainMenu(){
+        return "\n"+
+        "1. Create Group\n"+
+        "2. Join Group\n"+
+        "3. Send Message";
+    }
 
     @Override
     public void run() {
@@ -31,44 +37,66 @@ class ClientHandler implements Runnable {
         try {
             clientName = in.readLine(); // Solicita un nombre de usuario a un cliente
             while (clientes.personExist(clientName)) { // Verifica que el nombre de usuario del nuevo cliente no exista
-                out.println("Nombre de usuario ya existente. Por favor, ingrese otro nombre."); // Solicita de nuevo el nombre si ese nombre ya está en uso
+                out.println("\nUsername already taken. Please enter a new name."); // Solicita de nuevo el nombre si ese nombre ya está en uso
                 clientName = in.readLine();
             }
             clientes.addPerson(clientName, out); // Añade al cliente al chatters con su canal de salida out
             clientes.sendMessageToAll(clientName + " has joined the chat."); // Notifica a los demás usuarios que hay un nuevo miembro en el chat
             out.println("You have joined the group"); // Notifica al cliente que fue aceptado
-
+            out.println(mainMenu());
             String message;
+            Integer flag =1;
             while ((message = in.readLine()) != null) {
-<<<<<<< HEAD
-                if (message.startsWith("@")) {
-            // Mensaje privado
-                String[] parts = message.split(" ", 2);
-            if (parts.length > 1) {
-                String recipient = parts[0].substring(1);
-                String privateMessage = parts[1];
-            clientes.sendMessageToUser(clientName, recipient, privateMessage);
-        } else {
-            out.println("Invalid private message format. Usage: @recipient message");
-        }
-    } else {
-        // Mensaje público
-        clientes.sendMessageToAll(clientName + ": " + message);
-    }
-}
 
-=======
-                clientes.sendMessageToAll(clientName + ": " + message);
-            }
->>>>>>> a25aa627be212685dc2b1dbc327fe2513ecd09ed
+                switch(message){
+                    case "1":
+                        break;
+                    case "2":
+                        break;
+                    case "3":
+                        out.println("\n Type Message");
+                        String newMessage;
+                        while((newMessage = in.readLine())!=null){
+                            print("MensajeTest 1");
+                            if (message.startsWith("@")) {
+                                // Mensaje privado
+                                String[] parts = newMessage.split(" ", 2);
+                                if (parts.length > 1) {
+                                    String recipient = parts[0].substring(1);
+                                    String privateMessage = parts[1];
+                                    clientes.sendMessageToUser(clientName, recipient, privateMessage);
             
+                                } else {
+                                    out.println("Invalid private message format. Usage: @recipient message");
+                                }
+            
+                            }else {
+                                // Mensaje público
+                                clientes.sendMessageToAll(clientName + ": " + newMessage);
+                            }
+                            print("\n TestMessage 4!!!!");
+                            break;
+                        }
+                        print("\nEnd of Message Sending");
+                        break;
+                    case "0":
+                        out.println("See you Next Time!");
+                        break;
+                    default:
+                       print("\n Invalid Option");
+                }
+                print("\n TestMessage 5!!!!!");
+                out.println(mainMenu());
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            
+
         }
 
-    }
 
+    }
+    public static void print(Object o){System.out.println(o);}
 
 }
