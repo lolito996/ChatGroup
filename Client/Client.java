@@ -58,6 +58,12 @@ public class Client {
                         }
                         break;
                     case "2":
+                    String enteringGroup;
+                        while ((enteringGroup = userInput.readLine()) != null){
+                            out.println(enteringGroup);
+                            out.flush();
+                            break;
+                        }
                         break;
                     case "3":
                         String userInputMessage;

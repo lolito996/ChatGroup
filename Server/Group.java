@@ -11,6 +11,9 @@ public class Group {
         groupName = newName;
 
     }
+    public void removePersonFromGroup(Person p){
+        persons.remove(p);
+    }
     public void addPersonToGroup(Person newPerson){
         persons.add(newPerson);
     }
