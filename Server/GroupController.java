@@ -1,7 +1,6 @@
 package Server;
 import java.util.ArrayList;
 
-import Client.*;
 
 public class GroupController {
     private ArrayList<Group> groups;
