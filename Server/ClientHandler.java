@@ -78,7 +78,7 @@ class ClientHandler implements Runnable {
                             g1.removePersonFromGroup(p1);
                             p1.setIsInGroup(false);
                             String personLeftGroup = clientName + " has left the group.";
-                            clientes.sendMessageToAllInGroup(personLeftGroup,g1.getPersons());
+                            clientes.sendNotificationToAllInGroup(personLeftGroup,g1);
                             out.println("\n[System]: You are no Longer in the Group");
                         }else{
                             String groupString = "\n Enter Group Name :";
@@ -97,7 +97,7 @@ class ClientHandler implements Runnable {
                                     }else{
                                         groupController.addClientToGroup(index,p);
                                         String msj3 = clientName + " has joined the group.";
-                                        clientes.sendMessageToAllInGroup(msj3,groups.get(index).getPersons());
+                                        clientes.sendNotificationToAllInGroup(msj3,groups.get(index));
                                     }
                                     
                                 }
@@ -126,8 +126,7 @@ class ClientHandler implements Runnable {
                                 Person per1 = clientes.getPerson(clientName);
                                 if(per1.isInGroup()){
                                     Group group = per1.getGroup();
-                                    newMessage = "\n"+clientName+": "+newMessage;
-                                    clientes.sendMessageToAllInGroup(newMessage,group.getPersons());
+                                    clientes.sendMessageToAllInGroup(clientName,newMessage,group);
                                 }else{
                                     out.println("\n [System]: You are not in a group yet.....");
                                 }
@@ -172,7 +171,7 @@ class ClientHandler implements Runnable {
                             Group lastGroup = personLeaving.getGroup();
                             lastGroup.deletePersonFromGroup(personLeaving);
                             String personleavingMessage = clientName + " has left the group.";
-                            clientes.sendMessageToAllInGroup(personleavingMessage,lastGroup.getPersons());
+                            clientes.sendNotificationToAllInGroup(personleavingMessage,lastGroup);
                         }
                         clientes.removeClient(personLeaving);
                         out.println("See you Next Time!");
@@ -180,7 +179,9 @@ class ClientHandler implements Runnable {
                     default:
                        out.println("\n[System]: Invalid Option");
                 }
-                out.println(mainMenu());
+                try{
+                    out.println(mainMenu());
+                }catch(Exception e){}       
             }
 
         } catch (IOException e) {
