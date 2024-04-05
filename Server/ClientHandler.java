@@ -13,7 +13,6 @@ import javax.sound.sampled.TargetDataLine;
 
 class ClientHandler implements Runnable {
 
-    private Socket clientSocket; // Socket para la conexión con el cliente
     private BufferedReader in; // Flujo de entrada para leer los mensajes del cliente
     private PrintWriter out; // Flujo de salida para enviar mensajes al cliente
     private String clientName; // Nombre de usuario del cliente
@@ -24,8 +23,6 @@ class ClientHandler implements Runnable {
     
 
     public ClientHandler(Socket socket, Chatters clientes, ArrayList<Group> groups) {
-        // Asignar los objetos que llegan a su respectivo atributo en la clase
-        this.clientSocket = socket;
         this.clientes = clientes;
         this.groups = groups;
         this.groupController = new GroupController(groups);
@@ -235,9 +232,7 @@ class ClientHandler implements Runnable {
 
     public byte[] startRecording(String username) throws LineUnavailableException, IOException{
         out.println("\n Press Enter to start recording...");
-        //scanner.nextLine();
-        String enterInput;
-        while((enterInput = in.readLine())!=null){
+        while((in.readLine())!=null){
             break;
         }
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -265,16 +260,13 @@ class ClientHandler implements Runnable {
             recordingThread.start();
             // Espera a que el usuario detenga la grabación
             out.println("Recording... Press Enter to stop and send");
-            //scanner.nextLine();
-            String enterInput2;
-            while((enterInput2 = in.readLine())!=null){
+            while((in.readLine())!=null){
                 break;
             }
-            // Detiene la grabación y cierra la línea de entrada de audio
             targetDataLine.stop();
             targetDataLine.close();
             // Guarda el audio en un archivo y lo envía al servidor
-            clientes.saveAudio(byteArrayOutputStream.toByteArray());
+            Chatters.saveAudio(byteArrayOutputStream.toByteArray());
             byteArrayOutputStream.close();
         }
         return byteArrayOutputStream.toByteArray();
