@@ -10,27 +10,31 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.TargetDataLine;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Scanner;
 
 
 public class Chatters {
     
     private Set<Person> clientes = new HashSet<>(); // Lista de personas que serán nuestros clientes
     private ArrayList<Person> personList = new ArrayList<>();
-    Scanner scanner = new Scanner(System.in);
+    private ArrayList<String> messages;
     private static final String AUDIO_FOLDER = "audios";
 
     public Chatters() {
         createAudioFolderIfNeeded();
+        messages = new ArrayList<>();
     }
 
     // Método para verificar si un usuario existe, retorna true si existe
@@ -69,28 +73,65 @@ public class Chatters {
         personList.add(p);
     }
 
-    // Método para enviar un mensaje a todos los usuarios
+    // Método para enviar un mensaje a todos los usuarios (No es usado en ningún momento, pero se dejó por si es necesario en el futuro)
     public void sendMessageToAll(String mensaje) {
         for (Person p : clientes) {
             p.getOut().println(mensaje);
         }
     }
     //Envía un mensaje a todos los integrantes del grupo del remitente
-    public void sendMessageToAllInGroup(String mensaje,ArrayList<Person> persons) {
-        for (Person p : persons) {
-            p.getOut().println(mensaje);
+    public void sendMessageToAllInGroup(String clientName,String mensaje,Group group) {
+        ArrayList<Person> persons = group.getPersons();
+        mensaje = clientName+": "+mensaje;
+        try{
+            for (Person p : persons) {
+            p.getOut().println("\n"+mensaje);
+            }
+            saveMessage("("+group.getGroupName()+") "+mensaje);
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+    public void sendNotificationToAllInGroup(String message, Group group){
+        for (Person p : group.getPersons()) {
+            p.getOut().println(message);
         }
     }
     // Método para enviar un mensaje a un usuario específico
     public void sendMessageToUser(String sender, String recipient, String message) {
-        for (Person p : clientes) {
-            if (p.getName().equals(recipient)) {
-                p.getOut().println("\n"+sender + " (private): " + message);
-                return;
+        try{
+            for (Person p : clientes) {
+                if (p.getName().equals(recipient)) {
+                    String sendingMessage = sender + " (private): " + message;
+                    String newMessage = sender + " (private to "+recipient+") :"+message;
+                    p.getOut().println("\n"+sendingMessage);
+                    saveMessage(newMessage);
+                    return;
+                }
             }
+            // Enviar mensaje al remitente si el destinatario no se encuentra
+            sendMessageToSender(sender, "User '" + recipient + "' not found or offline.");
+        }catch(IOException e){
+            e.printStackTrace();
         }
-        // Enviar mensaje al remitente si el destinatario no se encuentra
-        sendMessageToSender(sender, "User '" + recipient + "' not found or offline.");
+        
+    }
+    //saveMessage : Guarda el historial de mensajes en un archivo txt
+    public void saveMessage(String msj) throws IOException {
+        messages.add(msj);
+        String path = "dataMessages.json";
+        File file = new File(path);
+        FileOutputStream fos = new FileOutputStream(file);
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fos));
+
+        String data = "";
+        for(int i=0;i<messages.size();i++){
+            data += "["+i+"] "+messages.get(i)+"\n";
+        }
+
+        writer.write(data);
+        writer.flush();
+        fos.close();
     }
     //listUsers: Retorna la lista de todos lo susuarios registrados en el sistema hasta ahora
     public String listUsers(){
