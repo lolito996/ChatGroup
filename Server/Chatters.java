@@ -151,46 +151,6 @@ public class Chatters {
             }
         }
     }
-    /*
-    public byte[] startRecording(String username) throws LineUnavailableException, IOException{
-        System.out.print("Press Enter to start recording...");
-        scanner.nextLine();
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        AudioFormat audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100, 16, 2, 4, 44100, false);
-        DataLine.Info info = new DataLine.Info(TargetDataLine.class, audioFormat);
-        if (!AudioSystem.isLineSupported(info)) {
-            // Verifica si el sistema soporta la línea de entrada de audio
-            System.err.println("Line not supported");
-            System.exit(0);
-        }
-        try (TargetDataLine targetDataLine = (TargetDataLine) AudioSystem.getLine(info)) {
-            targetDataLine.open(audioFormat);
-            targetDataLine.start();
-            Thread recordingThread = new Thread(() -> {
-                // Graba audio continuamente hasta que el usuario detiene la grabación
-                int bufferSize = (int) audioFormat.getSampleRate() * audioFormat.getFrameSize();
-                byte[] buffer = new byte[bufferSize];
-                while (true) {
-                    int count = targetDataLine.read(buffer, 0, buffer.length);
-                    if (count > 0) {
-                        byteArrayOutputStream.write(buffer, 0, count);
-                    }
-                }
-            });
-            recordingThread.start();
-            // Espera a que el usuario detenga la grabación
-            System.out.println("Recording... Press Enter to stop and send");
-            scanner.nextLine();
-            // Detiene la grabación y cierra la línea de entrada de audio
-            targetDataLine.stop();
-            targetDataLine.close();
-            // Guarda el audio en un archivo y lo envía al servidor
-            saveAudio(byteArrayOutputStream.toByteArray());
-            byteArrayOutputStream.close();
-        }
-        return byteArrayOutputStream.toByteArray();
-    }
-    /* */
     // Verifica si la carpeta de audio existe, si no, la crea
     public static void createAudioFolderIfNeeded() {
         Path audioFolderPath = Paths.get(AUDIO_FOLDER);
