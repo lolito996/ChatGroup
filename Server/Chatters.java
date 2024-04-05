@@ -42,10 +42,12 @@ public class Chatters {
         }
         return false;
     }
+    //removeClient : Elimina un cliente de la lista de usuarios
     public void removeClient(Person person){
         clientes.remove(person);
         personList.remove(person);
     }
+    //getPerson retorna una sola persona buscándola por su nombre
     public Person getPerson(String name){
         Person person = null;
         for(int i=0;i<personList.size();i++){
@@ -55,6 +57,7 @@ public class Chatters {
         }
         return person;
     }
+    //getSize : Retorna cuantos usuarios hay registrados
     public int getSize(){
         return clientes.size();
     }
@@ -72,6 +75,7 @@ public class Chatters {
             p.getOut().println(mensaje);
         }
     }
+    //Envía un mensaje a todos los integrantes del grupo del remitente
     public void sendMessageToAllInGroup(String mensaje,ArrayList<Person> persons) {
         for (Person p : persons) {
             p.getOut().println(mensaje);
@@ -88,6 +92,7 @@ public class Chatters {
         // Enviar mensaje al remitente si el destinatario no se encuentra
         sendMessageToSender(sender, "User '" + recipient + "' not found or offline.");
     }
+    //listUsers: Retorna la lista de todos lo susuarios registrados en el sistema hasta ahora
     public String listUsers(){
         String msj = "\n  USERS :";
         for (Person p : clientes) {
@@ -176,20 +181,22 @@ public class Chatters {
             e.printStackTrace();
         }
     }
+    //SendAudioToUser : Metodo para enviar audio a un solo usuario, en caso de que el audio sea privado
     public void sendAudioToUser(String recipient,String sender,byte[] audioData ){
         for (Person p : clientes) {
             if (p.getName().equals(recipient)) {
-                p.getOut().println(sender + " (private Audio): ");
+                p.getOut().println("\n"+sender + " (private Audio): ");
                 playAudio(audioData);
                 return;
             }
         }
         // Enviar mensaje al remitente si el destinatario no se encuentra
-        sendMessageToSender(sender, "User '" + recipient + "' not found or offline.");
+        sendMessageToSender("[System] : "+sender, "User '" + recipient + "' not found or offline.");
     }
+    //sendAudioToAll: Envía un audio a todos los integrantes del grupo del remitente.
     public void sendAudioToAll(String sender,byte[] audioData,ArrayList<Person> persons ){
             for (Person p : persons) {
-                p.out.println("Audio enviado por"+ sender);
+                p.out.println("\nAudio enviado por "+ sender);
                 playAudio(audioData);
             }
         
