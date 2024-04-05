@@ -13,6 +13,7 @@ public class Group {
     }
     public void removePersonFromGroup(Person p){
         persons.remove(p);
+        p.addToGroup(null);
     }
     public void addPersonToGroup(Person newPerson){
         persons.add(newPerson);

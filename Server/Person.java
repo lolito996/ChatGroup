@@ -30,10 +30,10 @@ public class Person {
         this.isInGroup = boolVariable;
     }
     public String getName() {
-        return name;
+        return this.name;
     }
     
     public PrintWriter getOut() {
-        return out;
+        return this.out;
     }
 }
