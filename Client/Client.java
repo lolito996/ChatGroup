@@ -5,14 +5,11 @@ import java.net.*;
 public class Client {
     private static final String SERVER_IP = "localhost";
     private static final int PORT = 3500;
-    private static final String AUDIO_FOLDER = "audios";
 
     public static void main(String[] args) throws InterruptedException{
         try {
             Socket socket = new Socket(SERVER_IP, PORT);
             System.out.println("connection established with the server");
-
-            String message;
             BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));

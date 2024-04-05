@@ -1,38 +1,34 @@
 package Server;
+
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server {
+    public static final int SIZE_POOL = 50;
 
-     public static void main(String[] args) {
-
+    public static void main(String[] args) {
         int PORT = 3500;
         Chatters clientes = new Chatters(); //lista de clientes
         ArrayList<Group> groups = new ArrayList<>();
+        ExecutorService threadPool = Executors.newFixedThreadPool(SIZE_POOL);
 
-        try {
-            ServerSocket serverSocket = new ServerSocket(PORT);
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Server started. Waiting for clients...");
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("New client connected: " + clientSocket);
-                //clientes.addPerson();
-
-                ClientHandler clientHandler = new ClientHandler(clientSocket, clientes, groups);
-                Thread clientThread = new Thread(clientHandler);
-                clientThread.start();
-                //crea el objeto para gestionar al cliente y le envia la informacion necesaria
-                //inicia el hilo para ese cliente
-                
-
+                threadPool.execute(new ClientHandler(clientSocket, clientes, groups));
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error en el servidor: " + e.getMessage());
+        } finally {
+            threadPool.shutdown();
         }
     }
-
-   
 }
+
 
