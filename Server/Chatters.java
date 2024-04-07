@@ -9,9 +9,11 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -50,11 +52,18 @@ public class Chatters {
     //getPerson retorna una sola persona buscándola por su nombre
     public Person getPerson(String name){
         Person person = null;
+        for(Person p : clientes){
+            if(p.getName().equals(name)){
+                person = p;
+            }   
+        }
+        /*
         for(int i=0;i<personList.size();i++){
             if(personList.get(i).getName().equals(name)){
                 person = personList.get(i);
             }
         }
+        */
         return person;
     }
     //getSize : Retorna cuantos usuarios hay registrados
@@ -63,16 +72,16 @@ public class Chatters {
     }
 
     // Método para agregar un usuario nuevo
-    public void addPerson(String nombre, PrintWriter out) {
-        Person p = new Person(nombre, out);
+    public void addPerson(String nombre, ObjectOutputStream newOutputStream) {
+        Person p = new Person(nombre, newOutputStream);
         clientes.add(p);
         personList.add(p);
     }
 
     // Método para enviar un mensaje a todos los usuarios (No es usado en ningún momento, pero se dejó por si es necesario en el futuro)
-    public void sendMessageToAll(String mensaje) {
+    public void sendMessageToAll(String mensaje) throws IOException {
         for (Person p : clientes) {
-            p.getOut().println(mensaje);
+            p.getOutputStream().writeObject(mensaje);
         }
     }
     //Envía un mensaje a todos los integrantes del grupo del remitente
@@ -81,7 +90,7 @@ public class Chatters {
         mensaje = clientName+": "+mensaje;
         try{
             for (Person p : persons) {
-            p.getOut().println("\n"+mensaje);
+            p.getOutputStream().writeObject("\n"+mensaje);
             }
             saveMessage("("+group.getGroupName()+") "+mensaje);
         }catch(IOException e){
@@ -90,7 +99,11 @@ public class Chatters {
     }
     public void sendNotificationToAllInGroup(String message, Group group){
         for (Person p : group.getPersons()) {
-            p.getOut().println(message);
+            try {
+                p.getOutputStream().writeObject(message);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
     // Método para enviar un mensaje a un usuario específico
@@ -100,7 +113,7 @@ public class Chatters {
                 if (p.getName().equals(recipient)) {
                     String sendingMessage = sender + " (private): " + message;
                     String newMessage = sender + " (private to "+recipient+") :"+message;
-                    p.getOut().println("\n"+sendingMessage);
+                    p.getOutputStream().writeObject("\n"+sendingMessage);
                     saveMessage(newMessage);
                     return;
                 }
@@ -139,10 +152,10 @@ public class Chatters {
     }
 
 // Método para enviar un mensaje de error al remitente
-    private void sendMessageToSender(String sender, String message) {
+    private void sendMessageToSender(String sender, String message) throws IOException {
         for (Person p : clientes) {
             if (p.getName().equals(sender)) {
-                p.getOut().println(message);
+                p.getOutputStream().writeObject(message);
                 return;
             }
         }
@@ -179,26 +192,43 @@ public class Chatters {
         }
     }
     //SendAudioToUser : Metodo para enviar audio a un solo usuario, en caso de que el audio sea privado
+    /*
     public void sendAudioToUser(String recipient,String sender,byte[] audioData ){
+        Person person = getPerson(recipient);
+        if(person != null){
+            person.getOut().println("\n"+sender + " (private Audio): ");
+            person.setAudioData(audioData);
+            //sendAudio2(audioData,person);
+            //playAudio(audioData);
+            return;
+
+        }else{
+            sendMessageToSender("[System] : "+sender, "User '" + recipient + "' not found or offline.");
+        }
+        
         for (Person p : clientes) {
             if (p.getName().equals(recipient)) {
                 p.getOut().println("\n"+sender + " (private Audio): ");
-                playAudio(audioData);
+                p.setAudioData(audioData);
+                sendAudio2();
+                //playAudio(audioData);
                 return;
             }
         }
+    
         // Enviar mensaje al remitente si el destinatario no se encuentra
-        sendMessageToSender("[System] : "+sender, "User '" + recipient + "' not found or offline.");
+        
     }
+    */
+    
     //sendAudioToAll: Envía un audio a todos los integrantes del grupo del remitente.
-    public void sendAudioToAll(String sender,byte[] audioData,ArrayList<Person> persons ){
+    public void sendAudioToAll(String sender,byte[] audioData,ArrayList<Person> persons ) throws IOException{
             for (Person p : persons) {
-                p.out.println("\nAudio enviado por "+ sender);
+                p.getOutputStream().writeObject("\nAudio enviado por "+ sender);
                 playAudio(audioData);
             }
         
     }
-
 
     // Reproduce los datos de audio
     public static void playAudio(byte[] audioData) {
