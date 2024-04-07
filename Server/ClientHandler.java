@@ -15,6 +15,8 @@ class ClientHandler implements Runnable {
 
     private BufferedReader in; // Flujo de entrada para leer los mensajes del cliente
     private PrintWriter out; // Flujo de salida para enviar mensajes al cliente
+    private ObjectInputStream inputStream;
+    private ObjectOutputStream outputStream;
     private String clientName; // Nombre de usuario del cliente
     private GroupController groupController;
     ArrayList<Group> groups; //lista de grupos creados
@@ -32,6 +34,8 @@ class ClientHandler implements Runnable {
         try {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
+            inputStream = new ObjectInputStream(socket.getInputStream());
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -42,18 +46,30 @@ class ClientHandler implements Runnable {
     public void run() {
 
         try {
-            clientName = in.readLine(); // Solicita un nombre de usuario a un cliente
-            while (clientes.personExist(clientName) || clientName.equalsIgnoreCase("all")) { // Verifica que el nombre de usuario del nuevo cliente no exista
-                out.println("\nUsername already taken. Please enter a new name."); // Solicita de nuevo el nombre si ese nombre ya está en uso
+
+            String newClientName;
+            String ClientName;
+            while((newClientName = in.readLine())!=null){
+                if(clientes.personExist(newClientName) || newClientName.equalsIgnoreCase("all")){
+                    out.println("0");
+                }else{
+                    clientName = newClientName;
+                    out.println("1");
+                    break;
+                }
+            }
+            /* clientName = in.readLine(); // Solicita un nombre de usuario a un cliente
+            while (clientes.personExist(clientName) || clientName.equalsIgnoreCase("all")) { 
+                out.println("\nUsername already taken. Please enter a new name."); 
                 clientName = in.readLine();
             }
-            clientes.addPerson(clientName, out); // Añade al cliente al chatters con su canal de salida out
+            */
+            clientes.addPerson(clientName, out, outputStream); // Añade al cliente al chatters con su canal de salida out
             //clientes.sendMessageToAll(clientName + " has joined the chat."); 
             out.println("------------WELCOME---------------");
             out.println(mainMenu());
             String message;
             while ((message = in.readLine()) != null) {
-
                 switch(message){
                     case "1":
                         createGroup();
@@ -69,7 +85,7 @@ class ClientHandler implements Runnable {
                         sendMessage();
                         break;
                     case "4":
-                        sendAudio();
+                        sendAudioToUserGiven();
                         break;
                     case "5":
                         String users = clientes.listUsers();
@@ -88,8 +104,11 @@ class ClientHandler implements Runnable {
 
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (LineUnavailableException e) {
-            e.printStackTrace();
+            //} catch (LineUnavailableException e) {
+            //e.printStackTrace();
+        } catch (ClassNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
         } finally {
 
         }
@@ -173,6 +192,54 @@ class ClientHandler implements Runnable {
             clientes.sendMessageToAllInGroup(clientName,message,group);
         }else{
             out.println("\n [System]: You are not in a group yet.....");
+        }
+    }
+    private void sendAudioToUser() throws IOException{
+        String userAudio;
+        out.println("Enter recipient username (or 'all' for group): ");
+        while((userAudio = in.readLine())!=null){
+    
+            if(userAudio.equalsIgnoreCase("all")){
+                out.println("grabando");
+            }else{
+                out.println("grabando");
+                clientes.recordAudio(clientName,userAudio);
+            }
+            break;
+        }
+    }
+    private void sendAudioToUserGiven() throws IOException, ClassNotFoundException{
+        Object receivedObj;
+        while ((receivedObj = inputStream.readObject())!=null) {
+            System.out.println("Entra en objetorecibido desde Handler");
+            if (receivedObj instanceof VoiceNote) {
+                VoiceNote voiceNote = (VoiceNote) receivedObj;
+                String receiverName = voiceNote.getSender();
+
+                if (receiverName.equalsIgnoreCase("all")) {
+                    // Sending voice note to all clients except sender
+                    Person sender = clientes.getPerson(clientName);
+                    Group group = sender.getGroup();
+                    for (Person p : group.getPersons()) {
+                        ObjectOutputStream clientStream = p.getOutputStream();
+                        if (clientStream != outputStream) {
+                            clientStream.writeObject(voiceNote);
+                        }
+                    }
+                } else {
+                    Person receiver = clientes.getPerson(receiverName);
+                    if(receiver!=null){
+                        ObjectOutputStream recipientStream = receiver.getOutputStream();
+                        if (recipientStream != null) {
+                            recipientStream.writeObject(voiceNote);
+                        }
+                    }else{
+                        
+                    }
+                    // Sending voice note to specific client
+                    
+                }
+            }
         }
     }
     private void sendAudio() throws IOException, LineUnavailableException{

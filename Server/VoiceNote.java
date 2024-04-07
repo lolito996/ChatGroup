@@ -1,5 +1,8 @@
 package Server;
+// VoiceNote.java
 import java.io.Serializable;
+
+// Esta clase representa una nota de voz que puede ser enviada entre clientes.
 
 public class VoiceNote implements Serializable {
     // Número de versión para la serialización
