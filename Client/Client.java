@@ -29,17 +29,15 @@ public class Client {
             ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
             BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
             scanner = new Scanner(System.in); //Eliminar después
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             System.out.println("connection established with the server");
             System.out.print("Type username : ");
             String flag = "0";
-
             while(flag.equals("0")){
                 String newUsername = userInput.readLine();
-                out.println(newUsername);
-                String response = in.readLine();
+                outputStream.writeObject(newUsername);
+                //out.println(newUsername);
+                String response = (String)inputStream.readObject();
                 if(response.equals("0")){
                     System.out.println("\n[System] : Username Already Taken");
                     flag="0";
@@ -50,36 +48,40 @@ public class Client {
             }
 
             //Response del WELCOME
-            String response = in.readLine();
+            String response = (String)inputStream.readObject();
             System.out.println(response);
-            
+
             //Response de Main Menu
-            response = in.readLine();
+            response = (String)inputStream.readObject();
             System.out.println(response);
-            
-            Thread readerThread = new Thread(() -> {
+
+            /*Thread readerThread = new Thread(() -> {
                 try {
                     String msg;
                     while ((msg = in.readLine()) != null) {
                         System.out.println(msg);
-                        System.out.println("_______________________THREAD STRING________________");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
             readerThread.start();
+            */
+            
+            
             Thread receiverThread = new Thread(() -> {
                 try {
                     Object receivedObj;
                     while ((receivedObj = inputStream.readObject())!= null) {
                         
                         if (receivedObj instanceof VoiceNote) {
-                            System.out.println("_______________________THREAD AUDIO______________________");
                             // Recibe la nota de voz y la reproduce
                             VoiceNote voiceNote = (VoiceNote) receivedObj;
                             System.out.println("Voice note received from " + voiceNote.getSender());
                             playAudio(voiceNote.getVoiceData());
+
+                        }else if(receivedObj instanceof String){
+                            System.out.println((String)receivedObj);
                         }
                     }
                 } catch (IOException | ClassNotFoundException e) {
@@ -91,29 +93,29 @@ public class Client {
             String option = "";
             do{
                 option = userInput.readLine();
-                out.println(option);
+                outputStream.writeObject(option);
                 switch(option){
                     case "1":
                         String groupName;
                         while ((groupName = userInput.readLine()) != null){
-                            out.println(groupName);
-                            out.flush();
+                            outputStream.writeObject(groupName);
+                            outputStream.flush();
                             break;
                         }
                         break;
                     case "2":
                     String enteringGroup;
                         while ((enteringGroup = userInput.readLine()) != null){
-                            out.println(enteringGroup);
-                            out.flush();
+                            outputStream.writeObject(enteringGroup);
+                            outputStream.flush();
                             break;
                         }
                         break;
                     case "3":
                         String userInputMessage;
                         while ((userInputMessage = userInput.readLine()) != null){
-                            out.println(userInputMessage);
-                            out.flush();
+                            outputStream.writeObject(userInputMessage);
+                            outputStream.flush();
                             break;
                         }
                         break;
@@ -154,11 +156,15 @@ public class Client {
             System.exit(0);
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
+    
     private static void playAudio(byte[] audioData) {
         try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(audioData);
-             AudioInputStream audioInputStream = new AudioInputStream(byteArrayInputStream, getAudioFormat(), audioData.length / getAudioFormat().getFrameSize())) {
+            AudioInputStream audioInputStream = new AudioInputStream(byteArrayInputStream, getAudioFormat(), audioData.length / getAudioFormat().getFrameSize())) {
 
             // Abre una línea de salida de audio
             SourceDataLine sourceDataLine = AudioSystem.getSourceDataLine(getAudioFormat());
@@ -228,7 +234,7 @@ public class Client {
 
             // Guarda el audio en un archivo y lo envía al servidor
             saveAudio(byteArrayOutputStream.toByteArray());
-            VoiceNote voiceNote = new VoiceNote(recipient, byteArrayOutputStream.toByteArray());
+            VoiceNote voiceNote = new VoiceNote(recipient,username,byteArrayOutputStream.toByteArray());
             outputStream.writeObject(voiceNote);
             byteArrayOutputStream.close();
         } catch (LineUnavailableException | IOException e) {

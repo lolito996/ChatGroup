@@ -10,6 +10,7 @@ public class VoiceNote implements Serializable {
 
     // El remitente de la nota de voz
     private String sender;
+    private String receiver;
 
     // Los datos de audio de la nota de voz
     private byte[] voiceData;
@@ -18,8 +19,9 @@ public class VoiceNote implements Serializable {
     // Parámetros:
     //   - sender: El remitente de la nota de voz
     //   - voiceData: Los datos de audio de la nota de voz
-    public VoiceNote(String sender, byte[] voiceData) {
+    public VoiceNote(String receiver,String sender, byte[] voiceData) {
         this.sender = sender;
+        this.receiver = receiver;
         this.voiceData = voiceData;
     }
 
@@ -27,13 +29,16 @@ public class VoiceNote implements Serializable {
     // Retorna:
     //   - El remitente de la nota de voz
     public String getSender() {
-        return sender;
+        return this.sender;
+    }
+    public String getReceiver(){
+        return this.receiver;
     }
 
     // Método para obtener los datos de audio de la nota de voz.
     // Retorna:
     //   - Los datos de audio de la nota de voz
     public byte[] getVoiceData() {
-        return voiceData;
+        return this.voiceData;
     }
 }
