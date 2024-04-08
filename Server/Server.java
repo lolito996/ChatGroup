@@ -8,9 +8,9 @@ import java.util.concurrent.Executors;
 
 public class Server {
     public static final int SIZE_POOL = 50;
-
+    public static final int PORT = 3500;
+    public static final int BUFFER_SIZE = 1024 + 4;
     public static void main(String[] args) {
-        int PORT = 3500;
         Chatters clientes = new Chatters(); //lista de clientes
         ArrayList<Group> groups = new ArrayList<>();
         ExecutorService threadPool = Executors.newFixedThreadPool(SIZE_POOL);

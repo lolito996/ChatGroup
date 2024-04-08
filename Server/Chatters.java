@@ -5,17 +5,13 @@ import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,7 +22,6 @@ import java.util.HashSet;
 public class Chatters {
     
     private Set<Person> clientes = new HashSet<>(); // Lista de personas que serán nuestros clientes
-    private ArrayList<Person> personList = new ArrayList<>();
     private ArrayList<String> messages;
     private static final String AUDIO_FOLDER = "audios";
 
@@ -47,7 +42,6 @@ public class Chatters {
     //removeClient : Elimina un cliente de la lista de usuarios
     public void removeClient(Person person){
         clientes.remove(person);
-        personList.remove(person);
     }
     //getPerson retorna una sola persona buscándola por su nombre
     public Person getPerson(String name){
@@ -75,7 +69,6 @@ public class Chatters {
     public void addPerson(String nombre, ObjectOutputStream newOutputStream) {
         Person p = new Person(nombre, newOutputStream);
         clientes.add(p);
-        personList.add(p);
     }
 
     // Método para enviar un mensaje a todos los usuarios (No es usado en ningún momento, pero se dejó por si es necesario en el futuro)
@@ -188,70 +181,6 @@ public class Chatters {
             // Muestra un mensaje de confirmación
             System.out.println("Audio saved: " + filePath);
         } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    //SendAudioToUser : Metodo para enviar audio a un solo usuario, en caso de que el audio sea privado
-    /*
-    public void sendAudioToUser(String recipient,String sender,byte[] audioData ){
-        Person person = getPerson(recipient);
-        if(person != null){
-            person.getOut().println("\n"+sender + " (private Audio): ");
-            person.setAudioData(audioData);
-            //sendAudio2(audioData,person);
-            //playAudio(audioData);
-            return;
-
-        }else{
-            sendMessageToSender("[System] : "+sender, "User '" + recipient + "' not found or offline.");
-        }
-        
-        for (Person p : clientes) {
-            if (p.getName().equals(recipient)) {
-                p.getOut().println("\n"+sender + " (private Audio): ");
-                p.setAudioData(audioData);
-                sendAudio2();
-                //playAudio(audioData);
-                return;
-            }
-        }
-    
-        // Enviar mensaje al remitente si el destinatario no se encuentra
-        
-    }
-    */
-    
-    //sendAudioToAll: Envía un audio a todos los integrantes del grupo del remitente.
-    public void sendAudioToAll(String sender,byte[] audioData,ArrayList<Person> persons ) throws IOException{
-            for (Person p : persons) {
-                p.getOutputStream().writeObject("\nAudio enviado por "+ sender);
-                playAudio(audioData);
-            }
-        
-    }
-
-    // Reproduce los datos de audio
-    public static void playAudio(byte[] audioData) {
-        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(audioData);
-             AudioInputStream audioInputStream = new AudioInputStream(byteArrayInputStream, getAudioFormat(), audioData.length / getAudioFormat().getFrameSize())) {
-
-            // Abre una línea de salida de audio
-            SourceDataLine sourceDataLine = AudioSystem.getSourceDataLine(getAudioFormat());
-            sourceDataLine.open(getAudioFormat());
-            sourceDataLine.start();
-
-            byte[] buffer = new byte[4096];
-            int bytesRead = 0;
-
-            // Lee datos de audio del flujo de entrada y los escribe en la línea de salida
-            while ((bytesRead = audioInputStream.read(buffer, 0, buffer.length)) != -1) {
-                sourceDataLine.write(buffer, 0, bytesRead);
-            }
-
-            // Drena la línea de salida y la cierra
-            sourceDataLine.drain();
-            sourceDataLine.close();
-        } catch (LineUnavailableException | IOException e) {
             e.printStackTrace();
         }
     }
