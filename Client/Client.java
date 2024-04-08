@@ -131,9 +131,6 @@ public class Client {
                     case "6":
                         startCall();
                         break;
-                    case "7":
-                    sendSong();
-                        break;
                     case "0":
                         Thread.sleep(200);
                         break;
@@ -152,10 +149,6 @@ public class Client {
             e.printStackTrace();
         }
     }
-    private void sendSong(){
-        
-    }
-
     private void startCall() throws IOException{
         System.out.println("Who are you Calling?");
         String recipient = userInput.readLine();
@@ -170,7 +163,7 @@ public class Client {
         if (!AudioSystem.isLineSupported(info)) {
             // Verifica si el sistema soporta la línea de entrada de audio
             System.err.println("Line not supported");
-            System.exit(0);
+            return;
         }
 
         try (TargetDataLine targetDataLine = (TargetDataLine) AudioSystem.getLine(info)) {
@@ -178,7 +171,7 @@ public class Client {
             targetDataLine.start();
 
             Thread recordingThread = new Thread(() -> {
-                // Graba audio continuamente hasta que el usuario detiene la grabación
+                // escucha audio continuamente hasta que el usuario detiene la grabación
                 int bufferSize = (int) audioFormat.getSampleRate() * audioFormat.getFrameSize();
                 byte[] buffer = new byte[bufferSize];
 
@@ -222,7 +215,6 @@ public class Client {
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(audioData);
             AudioInputStream audioInputStream = new AudioInputStream(byteArrayInputStream, getAudioFormat(), audioData.length / getAudioFormat().getFrameSize())) {
             // Abre una línea de salida de audio
-            System.out.println("SizeData: "+audioData.length);
             SourceDataLine sourceDataLine = AudioSystem.getSourceDataLine(getAudioFormat());
             sourceDataLine.open(getAudioFormat());
             sourceDataLine.start();

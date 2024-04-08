@@ -2,7 +2,7 @@ package Server;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Scanner;
+
 
 class ClientHandler implements Runnable {
 
@@ -99,10 +99,11 @@ class ClientHandler implements Runnable {
                         outputStream.writeObject("\n[System]: Invalid Option");
                 }
                 try{
-                    Thread.sleep(1000);
+                    Thread.sleep(800);
                     outputStream.writeObject(mainMenu());
                 }catch(Exception e){}       
             }
+        }catch(EOFException e){
         }catch(IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -207,13 +208,14 @@ class ClientHandler implements Runnable {
                     outputStream.writeObject("[System] : User Not Found");
                 }
             }else if(receivedObj instanceof EndingFlag){
-                break;
+                outputStream.writeObject("\nCall Ended");
+                return;
             }else{
                 outputStream.writeObject("\n[System] : Audio not received by server");
-                break;
+                return;
             }
         }
-        outputStream.writeObject("\nCall Ended");
+        
     }
     private void sendAudio() throws IOException, ClassNotFoundException{
         Object receivedObj;
@@ -286,7 +288,6 @@ class ClientHandler implements Runnable {
         "4. Send Audio\n"+
         "5. Print all Users\n"+
         "6. Start a call\n"+
-        "7. Send Saved Song\n"+
         "0. Exit Program\n";
         
     }
