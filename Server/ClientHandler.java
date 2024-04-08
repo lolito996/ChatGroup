@@ -12,16 +12,14 @@ class ClientHandler implements Runnable {
     private ObjectOutputStream outputStream; //Flujo de salida de mensajes
     private String clientName; // Nombre de usuario del cliente
     private GroupController groupController;
-    ArrayList<Group> groups; //lista de grupos creados
-    Chatters clientes; // Objeto que contiene la lista de clientes conectados
-    Scanner scanner;
+    private ArrayList<Group> groups; //lista de grupos creados
+    private Chatters clientes; // Objeto que contiene la lista de clientes conectados
     
 
     public ClientHandler(Socket socket, Chatters clientes, ArrayList<Group> groups) {
         this.clientes = clientes;
         this.groups = groups;
         this.groupController = new GroupController(groups);
-        this.scanner= new Scanner(System.in);
 
         // Crear canales de entrada in y de salida out para la comunicación
         try {
@@ -57,6 +55,17 @@ class ClientHandler implements Runnable {
 
             outputStream.writeObject(mainMenu());
 
+            executeProgram();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e1) {
+            e1.printStackTrace();
+        }
+
+    }
+    private void executeProgram(){
+        try{
             String message;
             while ((message = (String)inputStream.readObject()) != null) {
                 switch(message){
@@ -80,6 +89,9 @@ class ClientHandler implements Runnable {
                         String users = clientes.listUsers();
                         outputStream.writeObject(users);
                         break;
+                    case "6":
+                        startCall();
+                        break;
                     case "0":
                         clientExitProgram();
                         break;
@@ -87,18 +99,16 @@ class ClientHandler implements Runnable {
                         outputStream.writeObject("\n[System]: Invalid Option");
                 }
                 try{
+                    Thread.sleep(1000);
                     outputStream.writeObject(mainMenu());
                 }catch(Exception e){}       
             }
-
-        } catch (IOException e) {
+        }catch(IOException e) {
             e.printStackTrace();
-        } catch (ClassNotFoundException e1) {
-            e1.printStackTrace();
-        } finally {
-
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
-
+        
     }
     private void createGroup() throws IOException, ClassNotFoundException{
         outputStream.writeObject("\n Enter Group Name :");
@@ -147,7 +157,7 @@ class ClientHandler implements Runnable {
         }
     }
     private void sendMessage() throws IOException, ClassNotFoundException{
-        outputStream.writeObject("\n Type Message :");
+        outputStream.writeObject("\n Type Message (@username --> for private message ):");
         String newMessage;
         while((newMessage = (String)inputStream.readObject())!=null){
             if (newMessage.startsWith("@")) {
@@ -178,6 +188,32 @@ class ClientHandler implements Runnable {
         }else{
             outputStream.writeObject("\n [System]: You are not in a group yet.....");
         }
+    }
+    private void startCall() throws ClassNotFoundException, IOException{
+        Object receivedObj;
+        while ((receivedObj = inputStream.readObject())!=null) {
+
+            if (receivedObj instanceof Call) {
+                Call call = (Call) receivedObj;
+                String receiverName = call.getReceiver();
+                if(clientes.personExist(receiverName)){
+
+                    Person receiver = clientes.getPerson(receiverName);
+                    ObjectOutputStream recipientStream = receiver.getOutputStream();
+                    if (recipientStream != null) {
+                        recipientStream.writeObject(call);
+                    }
+                }else{
+                    outputStream.writeObject("[System] : User Not Found");
+                }
+            }else if(receivedObj instanceof EndingFlag){
+                break;
+            }else{
+                outputStream.writeObject("\n[System] : Audio not received by server");
+                break;
+            }
+        }
+        outputStream.writeObject("\nCall Ended");
     }
     private void sendAudio() throws IOException, ClassNotFoundException{
         Object receivedObj;
@@ -214,16 +250,16 @@ class ClientHandler implements Runnable {
                     }else{
                         outputStream.writeObject("\n[System] : User Not found or offline");
                     }
-                    break;
+                    
                     // Sending voice note to specific client
                 }
+                break;
             }else{
                 outputStream.writeObject("\n[System] : Audio not received by server");
                 break;
             }
         }
     }
-    
     private void clientExitProgram() throws IOException{
         Person personLeaving = clientes.getPerson(clientName);
         if(personLeaving.isInGroup()){
@@ -249,6 +285,8 @@ class ClientHandler implements Runnable {
         "3. Send Message\n"+
         "4. Send Audio\n"+
         "5. Print all Users\n"+
+        "6. Start a call\n"+
+        "7. Send Saved Song\n"+
         "0. Exit Program\n";
         
     }

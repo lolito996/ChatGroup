@@ -15,21 +15,37 @@ import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.TargetDataLine;
 
 import Server.VoiceNote;
+import Server.Call;
+import Server.EndingFlag;
 public class Client {
     private static final String SERVER_IP = "localhost";
     private static final int PORT = 3500;
     private static final String AUDIO_FOLDER = "audios";
-    private static Scanner scanner;
-    private static String username;
 
-    public static void main(String[] args) throws InterruptedException{
-        try {
-            Socket socket = new Socket(SERVER_IP, PORT);
-            ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+    private Scanner scanner;
+    private String username;
+    private ObjectOutputStream outputStream;
+    private ObjectInputStream inputStream;
+    private BufferedReader userInput;
+    private Socket socket;
+    public Client(){
+        try{
+            socket = new Socket(SERVER_IP, PORT);
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
+            inputStream = new ObjectInputStream(socket.getInputStream());
+            userInput = new BufferedReader(new InputStreamReader(System.in));
             scanner = new Scanner(System.in); //Eliminar después
-
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+        
+    }
+    public static void main(String[] args) throws InterruptedException{
+        Client main = new Client();
+        main.receiveClient();
+    }
+    private void receiveClient(){
+        try {
             System.out.println("connection established with the server");
             System.out.print("Type username : ");
             String flag = "0";
@@ -54,21 +70,7 @@ public class Client {
             //Response de Main Menu
             response = (String)inputStream.readObject();
             System.out.println(response);
-
-            /*Thread readerThread = new Thread(() -> {
-                try {
-                    String msg;
-                    while ((msg = in.readLine()) != null) {
-                        System.out.println(msg);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-            readerThread.start();
-            */
-            
-            
+                       
             Thread receiverThread = new Thread(() -> {
                 try {
                     Object receivedObj;
@@ -77,11 +79,15 @@ public class Client {
                         if (receivedObj instanceof VoiceNote) {
                             // Recibe la nota de voz y la reproduce
                             VoiceNote voiceNote = (VoiceNote) receivedObj;
-                            System.out.println("Voice note received from " + voiceNote.getSender());
+                            System.out.println("\n Voice note received from " + voiceNote.getSender());
                             playAudio(voiceNote.getVoiceData());
 
                         }else if(receivedObj instanceof String){
                             System.out.println((String)receivedObj);
+
+                        }else if(receivedObj instanceof Call){
+                            Call call = (Call) receivedObj;
+                            playAudio(call.getVoiceData());
                         }
                     }
                 } catch (IOException | ClassNotFoundException e) {
@@ -120,29 +126,13 @@ public class Client {
                         }
                         break;
                     case "4":
-                        recordAudio(outputStream);
-
-                        /* 
-                        String userInputAudio;
-                        while ((userInputAudio = userInput.readLine()) != null){
-                            out.println(userInputAudio);
-                            out.flush();
-                            break;
-                        }
-                        String EnterInput1;
-                        while ((EnterInput1 = userInput.readLine()) != null){
-                            out.println(EnterInput1);
-                            out.flush();
-                            break;
-                        }
-                        String EnterInput2;
-                        while ((EnterInput2 = userInput.readLine()) != null){
-                            out.println(EnterInput2);
-                            out.flush();
-                            break;
-                        }
-                        */
-                        
+                        recordAudio();  
+                        break;
+                    case "6":
+                        startCall();
+                        break;
+                    case "7":
+                    sendSong();
                         break;
                     case "0":
                         Thread.sleep(200);
@@ -157,20 +147,86 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+    private void sendSong(){
+        
+    }
+
+    private void startCall() throws IOException{
+        System.out.println("Who are you Calling?");
+        String recipient = userInput.readLine();
+        // Inicia la grabación de audio cuando el usuario presiona Enter
+        System.out.print("\nPress Enter to start Talking...");
+        scanner.nextLine();
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        AudioFormat audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100, 16, 2, 4, 44100, false);
+        DataLine.Info info = new DataLine.Info(TargetDataLine.class, audioFormat);
+
+        if (!AudioSystem.isLineSupported(info)) {
+            // Verifica si el sistema soporta la línea de entrada de audio
+            System.err.println("Line not supported");
+            System.exit(0);
+        }
+
+        try (TargetDataLine targetDataLine = (TargetDataLine) AudioSystem.getLine(info)) {
+            targetDataLine.open(audioFormat);
+            targetDataLine.start();
+
+            Thread recordingThread = new Thread(() -> {
+                // Graba audio continuamente hasta que el usuario detiene la grabación
+                int bufferSize = (int) audioFormat.getSampleRate() * audioFormat.getFrameSize();
+                byte[] buffer = new byte[bufferSize];
+
+                while (true) {
+                    int count = targetDataLine.read(buffer, 0, buffer.length);
+                    if (count > 0) {
+                        try {
+                            byteArrayOutputStream.write(buffer, 0, count);
+                            Call call = new Call(recipient,username,byteArrayOutputStream.toByteArray());
+                            outputStream.writeObject(call);
+                            //buffer = new byte[bufferSize];
+                            byteArrayOutputStream.reset();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+            recordingThread.start();
+
+            // Espera a que el usuario detenga la grabación
+            System.out.print("Talk... Press Enter to finish call");
+            scanner.nextLine();
+
+            // Detiene la grabación y cierra la línea de entrada de audio
+            targetDataLine.stop();
+            targetDataLine.close();
+            recordingThread.interrupt();
+            // Guarda el audio en un archivo y lo envía al servidor
+
+            byteArrayOutputStream.close();
+            outputStream.writeObject(new EndingFlag());
+            
+        } catch (LineUnavailableException | IOException e) {
             e.printStackTrace();
         }
     }
     
-    private static void playAudio(byte[] audioData) {
-        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(audioData);
+    private void playAudio(byte[] audioData) {
+        try (
+            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(audioData);
             AudioInputStream audioInputStream = new AudioInputStream(byteArrayInputStream, getAudioFormat(), audioData.length / getAudioFormat().getFrameSize())) {
-
             // Abre una línea de salida de audio
+            System.out.println("SizeData: "+audioData.length);
             SourceDataLine sourceDataLine = AudioSystem.getSourceDataLine(getAudioFormat());
             sourceDataLine.open(getAudioFormat());
             sourceDataLine.start();
-
+            
             byte[] buffer = new byte[4096];
             int bytesRead = 0;
 
@@ -187,7 +243,8 @@ public class Client {
         }
     }
     
-    private static void recordAudio(ObjectOutputStream outputStream){
+    @SuppressWarnings("deprecation")
+    private void recordAudio(){
         // Solicita al usuario que ingrese el destinatario de la nota de voz
         System.out.print("Enter recipient username (or 'all' for group): ");
         String recipient = scanner.nextLine();
@@ -231,6 +288,7 @@ public class Client {
             // Detiene la grabación y cierra la línea de entrada de audio
             targetDataLine.stop();
             targetDataLine.close();
+            recordingThread.suspend();
 
             // Guarda el audio en un archivo y lo envía al servidor
             saveAudio(byteArrayOutputStream.toByteArray());
@@ -241,7 +299,7 @@ public class Client {
             e.printStackTrace();
         }
     }
-    private static void saveAudio(byte[] audioData) {
+    private void saveAudio(byte[] audioData) {
         try {
             // Obtiene el formato de audio
             AudioFormat audioFormat = getAudioFormat();
@@ -254,15 +312,13 @@ public class Client {
             // Escribe los datos de audio en un archivo WAV
             AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, filePath.toFile());
             // Muestra un mensaje de confirmación
-            System.out.println("Audio saved: " + filePath);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
     // Obtiene el formato de audio PCM firmado con las especificaciones proporcionadas
-    private static AudioFormat getAudioFormat() {
+    private AudioFormat getAudioFormat() {
         return new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100, 16, 2, 4, 44100, false);
     }
-    public static void print(Object o){System.out.println(o);}
 
 }
